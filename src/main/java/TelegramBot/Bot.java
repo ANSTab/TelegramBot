@@ -89,21 +89,22 @@ public class Bot extends TelegramLongPollingBot {
                     System.out.println(message.getText());
                     break;
                 default:
-                    for (ZZR zzr : list) {
-                        if (zzr.getName().toUpperCase().contains(message.getText().toUpperCase())) {
-                            String sms = "НАЗВА: "+zzr.getName()+"\n" +"НОРМА ВНЕСЕННЯ: "+ zzr.getNormaVneseniy()+"\n" +"ТИП: "+ zzr.getVid()+"\n" +"ВИРОБНИК: "+ zzr.getVirobnik()+"\n" +"ДІЮЧА РЕЧОВИНА: "+ zzr.getDv()+"\n" +"КУЛЬТУРА: "+ zzr.getKultura()+"\n" +"СПЕКТР ШКІДНИКІВ: "+ zzr.getSpectr()+"\n";
-                            System.out.println(sms);
-                            sendMsg(message, sms);
-                        }
-                    }
+            for (ZZR zzr : list) {
+                if (zzr.getName().toLowerCase().contains(message.getText().toLowerCase())) {
+                    String sms = "НАЗВА: " + zzr.getName() + "\n" + "НОРМА ВНЕСЕННЯ: " + zzr.getNormaVneseniy() + "\n" + "ТИП: " + zzr.getVid() + "\n" + "ВИРОБНИК: " + zzr.getVirobnik() + "\n" + "ДІЮЧА РЕЧОВИНА: " + zzr.getDv() + "\n" + "КУЛЬТУРА: " + zzr.getKultura() + "\n" + "СПЕКТР ШКІДНИКІВ: " + zzr.getSpectr() + "\n";
+                    System.out.println(sms);
+                    sendMsg(message, sms);
+                }
+            }
                     break;
             }
         }
+
     }
 
     private void sendMsg(Message message, String text) {
         SendMessage sendMessage = new SendMessage();
-        sendMessage.enableMarkdown(true);
+        sendMessage.enableMarkdown(false);
         sendMessage.setChatId(message.getChatId().toString());
         sendMessage.setReplyToMessageId(message.getMessageId());
         sendMessage.setText(text);
