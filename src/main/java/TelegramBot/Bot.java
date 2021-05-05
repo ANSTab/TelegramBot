@@ -4,19 +4,25 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
+import org.telegram.telegrambots.api.methods.groupadministration.GetChatMember;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
+import org.telegram.telegrambots.api.objects.User;
+import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.InvalidObjectException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 
 public class Bot extends TelegramLongPollingBot {
@@ -35,6 +41,7 @@ public class Bot extends TelegramLongPollingBot {
 
     public ArrayList<ZZR> returnList() throws InvalidObjectException, UnsupportedEncodingException {
         BaseJson baseJson = new BaseJson();
+
         //читання укр - символів
         ArrayList<ZZR> list = new ArrayList<ZZR>();
         String s = String.valueOf(baseJson.deserializatior());
@@ -46,7 +53,6 @@ public class Bot extends TelegramLongPollingBot {
             list.add(zzr);
         }
         return list;
-
     }
 
 
@@ -58,10 +64,9 @@ public class Bot extends TelegramLongPollingBot {
         replyKeyboardMarkup.setOneTimeKeyboard(false);
         List<KeyboardRow> keyboardRowList = new ArrayList<>();
         KeyboardRow keyboardFirstRow = new KeyboardRow();
-        keyboardFirstRow.add(new KeyboardButton("ЗЗР (назва)"));
-        keyboardFirstRow.add(new KeyboardButton("Діюча речовина"));
-
-
+        keyboardFirstRow.add(new KeyboardButton("ЗЗР(назва)"));
+        keyboardFirstRow.add(new KeyboardButton("ЗЗР(ДВ)"));
+        keyboardFirstRow.add(new KeyboardButton("ПМ"));
         keyboardRowList.add(keyboardFirstRow);
         replyKeyboardMarkup.setKeyboard(keyboardRowList);
 
@@ -78,8 +83,32 @@ public class Bot extends TelegramLongPollingBot {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-
         if (message != null && message.hasText()) {
+            String sms = null;
+            for (ZZR zzr : list) {
+                if (zzr.getName().toLowerCase().contains(message.getText().toLowerCase())) {
+                    sms = "НАЗВА: " + zzr.getName() + "\n" + "НОРМА ВНЕСЕННЯ: " + zzr.getNormaVneseniy() + "\n"
+                            + "ТИП: " + zzr.getVid() + "\n" + "ВИРОБНИК: " + zzr.getVirobnik() + "\n" + "ДІЮЧА РЕЧОВИНА: "
+                            + zzr.getDv() + "\n" + "КУЛЬТУРА: " + zzr.getKultura() + "\n" + "СПЕКТР ШКІДНИКІВ: " + zzr.getSpectr() + "\n";
+                    System.out.println(message.getChatId());
+                    String firstName = update.getMessage().getChat().getFirstName();
+                    String secondName = update.getMessage().getChat().getLastName();
+                    String mestext = update.getMessage().getText();
+                    System.out.println(firstName + "" + "\n" + secondName + "\n" + "" + mestext);
+                    System.out.println(sms);
+                    sendMsg(message, sms);
+                    System.out.println("___________________");
+                }
+            }
+            if (sms == null) {
+                sendMsg(message, "ЗЗР не знайдено");
+            }
+        }
+    }
+    //   }
+
+
+       /* if (message != null && message.hasText()) {
             switch (message.getText()) {
                 case "ЗЗР (назва)":
                     sendMsg(message, "Введіть назву препарату");
@@ -89,18 +118,23 @@ public class Bot extends TelegramLongPollingBot {
                     System.out.println(message.getText());
                     break;
                 default:
-            for (ZZR zzr : list) {
-                if (zzr.getName().toLowerCase().contains(message.getText().toLowerCase())) {
-                    String sms = "НАЗВА: " + zzr.getName() + "\n" + "НОРМА ВНЕСЕННЯ: " + zzr.getNormaVneseniy() + "\n" + "ТИП: " + zzr.getVid() + "\n" + "ВИРОБНИК: " + zzr.getVirobnik() + "\n" + "ДІЮЧА РЕЧОВИНА: " + zzr.getDv() + "\n" + "КУЛЬТУРА: " + zzr.getKultura() + "\n" + "СПЕКТР ШКІДНИКІВ: " + zzr.getSpectr() + "\n";
-                    System.out.println(sms);
-                    sendMsg(message, sms);
-                }
-            }
+                    for (ZZR zzr : list) {
+                        if (zzr.getName().toLowerCase().contains(message.getText().toLowerCase())) {
+                            String sms = "НАЗВА: " + zzr.getName() + "\n" + "НОРМА ВНЕСЕННЯ: " + zzr.getNormaVneseniy() + "\n" + "ТИП: " + zzr.getVid() + "\n" + "ВИРОБНИК: " + zzr.getVirobnik() + "\n" + "ДІЮЧА РЕЧОВИНА: " + zzr.getDv() + "\n" + "КУЛЬТУРА: " + zzr.getKultura() + "\n" + "СПЕКТР ШКІДНИКІВ: " + zzr.getSpectr() + "\n";
+                            System.out.println(message.getChatId());
+                            String firstName = update.getMessage().getChat().getFirstName();
+                            String secondName = update.getMessage().getChat().getLastName();
+
+                            String mestext = update.getMessage().getText();
+                            System.out.println(firstName + "" + "\n" + secondName + "\n" + "" + mestext);
+                            System.out.println(sms);
+                            sendMsg(message, sms);
+                        }
+                    }
                     break;
             }
-        }
+        }*/
 
-    }
 
     private void sendMsg(Message message, String text) {
         SendMessage sendMessage = new SendMessage();
@@ -108,6 +142,7 @@ public class Bot extends TelegramLongPollingBot {
         sendMessage.setChatId(message.getChatId().toString());
         sendMessage.setReplyToMessageId(message.getMessageId());
         sendMessage.setText(text);
+
         try {
             setButtons(sendMessage);
             sendMessage(sendMessage);
