@@ -4,11 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
-import org.telegram.telegrambots.api.methods.groupadministration.GetChatMember;
+import org.telegram.telegrambots.api.methods.ParseMode;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
+import org.telegram.telegrambots.api.objects.CallbackQuery;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
-import org.telegram.telegrambots.api.objects.User;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -17,7 +17,6 @@ import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
-import javax.annotation.PostConstruct;
 import java.io.InvalidObjectException;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
@@ -25,104 +24,78 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+public class MyTestBot extends TelegramLongPollingBot {
 
-public class Bot extends TelegramLongPollingBot {
     final static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    public static final String ЗЗР_НАЗВА = "/ЗЗР (назва)\uD83D\uDEE2";
+    public static final String ЗЗР_НАЗВА = "/ЗЗР\uD83D\uDEE2";
     public static final String ЗЗР_ДІЮЧА_РЕЧОВИНА = "/ЗЗР (Діюча речовина)\uD83E\uDDEC";
     public static final String ПОСІВНИЙ_МАТЕРІАЛ = "/Посівний матеріал\uD83C\uDF3D";
 
-    @PostConstruct
-    public void init() {
-        ApiContextInitializer.init();
-    }
-
-    public static void main(String[] args) throws InvalidObjectException, UnsupportedEncodingException {
-        ApiContextInitializer.init();
-        TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
-        try {
-            telegramBotsApi.registerBot(new Bot());
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public ArrayList<ZZR> returnList() throws InvalidObjectException, UnsupportedEncodingException {
-        BaseJson baseJson = new BaseJson();
-
-        //читання укр - символів
-        ArrayList<ZZR> list = new ArrayList<ZZR>();
-        String s = String.valueOf(baseJson.deserializatior());
-        String s1 = new String(s.getBytes("ISO-8859-1"), "UTF-8");
-
-        ZZR[] taskWorks = GSON.fromJson(s1, ZZR[].class);
-        for (ZZR t : taskWorks) {
-            ZZR zzr = new ZZR(t.getName(), t.getDv(), t.getVid(), t.getVirobnik(), t.getNormaVneseniy(), t.getKultura(), t.getSpectr());
-            list.add(zzr);
-        }
-        return list;
-    }
-
-/*
-    public void setButtons(SendMessage sendMessage) {
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-        sendMessage.setReplyMarkup(replyKeyboardMarkup);
-        replyKeyboardMarkup.setSelective(true);
-        replyKeyboardMarkup.setResizeKeyboard(true);
-        replyKeyboardMarkup.setOneTimeKeyboard(false);
-        List<KeyboardRow> keyboardRowList = new ArrayList<>();
-        KeyboardRow keyboardFirstRow = new KeyboardRow();
-        keyboardFirstRow.add(new KeyboardButton("ЗЗР(назва)"));
-        keyboardFirstRow.add(new KeyboardButton("ЗЗР(ДВ)"));
-        keyboardFirstRow.add(new KeyboardButton("ПМ"));
-        keyboardRowList.add(keyboardFirstRow);
-        replyKeyboardMarkup.setKeyboard(keyboardRowList);
-
-    }*/
-
+    @Override
     public void onUpdateReceived(Update update) {
-        Message message = update.getMessage();
-        Bot bot = new Bot();
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(message.getChatId());
-       sendMessage.setReplyMarkup(getMainMenu());
-        try {
-            execute(sendMessage.setText(" Ось, що вдалось знайти по вашому запиту:"));
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-        for (String s : bot.zzRposhukName(update)) {
+        if (update.hasMessage()) {
+            if (update.getMessage().hasText()) {
+                String text = update.getMessage().getText();
+                if (!text.equals(ЗЗР_НАЗВА)) {
+                    SendMessage sendMessage = new SendMessage();
+                    sendMessage.setChatId(update.getMessage().getChatId());
+                    sendMessage.setReplyMarkup(getMainMenu());
+                    sendMessage.setText("скористуйтесь меню");
+                    try {
+                        execute(sendMessage);
+                    } catch (TelegramApiException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (text.equals(ЗЗР_НАЗВА)) {
+                    SendMessage sendMessage = new SendMessage();
+                    sendMessage.setChatId(update.getMessage().getChatId());
+                    sendMessage.setReplyMarkup(getMainMenu());
+                    InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+                    InlineKeyboardButton inlineKeyboardButton1 = new InlineKeyboardButton("/ЗЗР (назва)");
+                    InlineKeyboardButton inlineKeyboardButton2 = new InlineKeyboardButton("/ЗЗР (Діюча речовина)");
+                    List<List<InlineKeyboardButton>> listList = new ArrayList<>();
+                    List<InlineKeyboardButton> keyboard = new ArrayList<>();
+                    keyboard.add(inlineKeyboardButton1);
+                    keyboard.add(inlineKeyboardButton2);
+                    listList.add(keyboard);
+                    inlineKeyboardButton1.setCallbackData("/ЗЗР (назва)");
+                    inlineKeyboardButton2.setCallbackData("/ЗЗР (Діюча речовина)");
+                    try {
+                        execute(sendMessage.setText("Введіть назву ЗЗР").setChatId(update.getMessage().getChatId()).setReplyMarkup(inlineKeyboardMarkup.setKeyboard(listList)));
+                    } catch (TelegramApiException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } else if (update.hasCallbackQuery()) {
+            Message message = update.getCallbackQuery().getMessage();
+            CallbackQuery callbackQuery = update.getCallbackQuery();
+            String data = callbackQuery.getData();
+            SendMessage sendMessage1 = new SendMessage().setParseMode(ParseMode.MARKDOWN).setChatId(message.getChatId());
+            if (data.equals("/ЗЗР (назва)")) {
+                sendMessage1.setText("Введіть назву препарату");
+            } else if (data.equals("/ЗЗР (Діюча речовина)")) {
+                sendMessage1.setText("Введіть ДВ препарату");
+            }
             try {
-                execute(sendMessage.setText(s));
+                execute(sendMessage1);
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
         }
     }
 
-/*
-    public SendMessage buttMessege (Message message){
-        SendMessage sendMessage = new SendMessage();
-        Update update = new Update();
-        message.getChatId();
-        switch (message.getText()){
-            case ЗЗР_НАЗВА:
-                zzRposhukName(update);
-                return ;
-        }return sendMessage.setText("ad");
-    }*/
-
-
     private ReplyKeyboardMarkup getMainMenu() {
         ReplyKeyboardMarkup markup = new ReplyKeyboardMarkup();
         KeyboardRow row1 = new KeyboardRow();
         KeyboardButton button1 = new KeyboardButton(ЗЗР_НАЗВА);
-        KeyboardButton button2 = new KeyboardButton(ЗЗР_ДІЮЧА_РЕЧОВИНА);
+      //  KeyboardButton button2 = new KeyboardButton(ЗЗР_ДІЮЧА_РЕЧОВИНА);
         markup.setSelective(true);
         markup.setResizeKeyboard(true);
         markup.setOneTimeKeyboard(false);
         row1.add(button1);
-        row1.add(button2);
+        //row1.add(button2);
         KeyboardRow row2 = new KeyboardRow();
         row2.add(ПОСІВНИЙ_МАТЕРІАЛ);
         List<KeyboardRow> rowList = new ArrayList<>();
@@ -132,10 +105,9 @@ public class Bot extends TelegramLongPollingBot {
         return markup;
     }
 
-
     public List<String> zzRposhukName(Update update) {
         Message message = update.getMessage();
-        Bot bot = new Bot();
+        MyTestBot bot = new MyTestBot();
         String sms = null;
         List<String> listGetZzr = new ArrayList<>();
         ArrayList<ZZR> list = null;
@@ -179,25 +151,39 @@ public class Bot extends TelegramLongPollingBot {
         }
         return listGetZzr;
     }
+    public ArrayList<ZZR> returnList() throws InvalidObjectException, UnsupportedEncodingException {
+        BaseJson baseJson = new BaseJson();
 
-    private void sendMsg(Message message, String text) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.enableMarkdown(false);
-        sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setReplyToMessageId(message.getMessageId());
-        sendMessage.setText(text);
-        try {
-            sendMessage(sendMessage);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
+        //читання укр - символів
+        ArrayList<ZZR> list = new ArrayList<ZZR>();
+        String s = String.valueOf(baseJson.deserializatior());
+        String s1 = new String(s.getBytes("ISO-8859-1"), "UTF-8");
+
+        ZZR[] taskWorks = GSON.fromJson(s1, ZZR[].class);
+        for (ZZR t : taskWorks) {
+            ZZR zzr = new ZZR(t.getName(), t.getDv(), t.getVid(), t.getVirobnik(), t.getNormaVneseniy(), t.getKultura(), t.getSpectr());
+            list.add(zzr);
         }
+        return list;
     }
 
+    @Override
     public String getBotUsername() {
         return "ANSTabBot";
     }
 
+    @Override
     public String getBotToken() {
         return "1727806810:AAF49TOPcO_NUcM6hxsCk9t4uCZzxUZ22gI";
+    }
+
+    public static void main(String[] args) throws InvalidObjectException, UnsupportedEncodingException {
+        ApiContextInitializer.init();
+        TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
+        try {
+            telegramBotsApi.registerBot(new MyTestBot());
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 }
